@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.druid.security.basic.authentication;
 
 import org.apache.druid.java.util.common.StringUtils;
@@ -23,6 +24,7 @@ import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.security.basic.BasicAuthUtils;
 import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorCredentials;
 
+import javax.naming.ldap.LdapName;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.Arrays;
@@ -37,14 +39,14 @@ public class BasicAuthenticatorUserPrincipal implements Principal
 
   private final String name;
   private final BasicAuthenticatorCredentials credentials;
-  private final Set<String> groups;
+  private final Set<LdapName> groups;
   private final Instant createdAt;
   private final AtomicReference<Instant> lastVerified = new AtomicReference<>();
 
   public BasicAuthenticatorUserPrincipal(
       String name,
       BasicAuthenticatorCredentials credentials,
-      Set<String> groups
+      Set<LdapName> groups
   )
   {
     this(name, credentials, groups, Instant.now());
@@ -53,7 +55,7 @@ public class BasicAuthenticatorUserPrincipal implements Principal
   private BasicAuthenticatorUserPrincipal(
       String name,
       BasicAuthenticatorCredentials credentials,
-      Set<String> groups,
+      Set<LdapName> groups,
       Instant createdAt
   )
   {
@@ -75,7 +77,7 @@ public class BasicAuthenticatorUserPrincipal implements Principal
     return this.name;
   }
 
-  public Set<String> getGroups()
+  public Set<LdapName> getGroups()
   {
     return groups;
   }
@@ -128,7 +130,7 @@ public class BasicAuthenticatorUserPrincipal implements Principal
     return StringUtils.format(
         "BasicAuthenticatorUserPrincipal[name=%s, groups=%s, createdAt=%s, lastVerified=%s]",
         name,
-        groups.stream().collect(Collectors.joining(",", "{", "}")),
+        groups.stream().map(LdapName::toString).collect(Collectors.joining(",", "{", "}")),
         createdAt,
         lastVerified);
   }

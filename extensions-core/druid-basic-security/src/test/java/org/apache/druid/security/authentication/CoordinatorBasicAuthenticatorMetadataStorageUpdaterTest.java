@@ -71,11 +71,8 @@ public class CoordinatorBasicAuthenticatorMetadataStorageUpdaterTest
                 new BasicHTTPAuthenticator(
                     null,
                     "test",
-                    null, "test",
-                    null,
-                    null,
-                    null,
-                    null,
+                    "test", null, null, null, null, null, false, null,
+                    null, null, null, null, null, null, null, null, null,
                     null
                 )
             )

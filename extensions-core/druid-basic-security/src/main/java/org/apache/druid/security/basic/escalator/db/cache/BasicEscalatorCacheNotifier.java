@@ -17,23 +17,17 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authentication;
+package org.apache.druid.security.basic.escalator.db.cache;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.apache.druid.server.security.AuthenticationResult;
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = DBCredentialsValidator.class)
-@JsonSubTypes(value = {
-    @JsonSubTypes.Type(name = "db", value = DBCredentialsValidator.class),
-    @JsonSubTypes.Type(name = "ldap", value = LDAPCredentialsValidator.class),
-})
-public interface CredentialsValidator
+/**
+ * Sends a notification to druid services, containing updated escalator state.
+ */
+public interface BasicEscalatorCacheNotifier
 {
-  AuthenticationResult validateCredentials(
-      String authenticatorName,
-      String authorizerName,
-      String username,
-      char[] password
-  );
+  /**
+   * Send the escalator credential state contained in updatedEscalatorCredential to all non-coordinator Druid services
+   *
+   * @param updatedEscalatorCredential Escalator credential state
+   */
+  void addEscalatorCredentialUpdate(byte[] updatedEscalatorCredential);
 }

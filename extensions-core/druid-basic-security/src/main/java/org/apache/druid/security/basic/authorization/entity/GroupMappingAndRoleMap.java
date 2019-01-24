@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
-public class GroupAndRoleMap
+public class GroupMappingAndRoleMap
 {
   @JsonProperty
-  private Map<String, BasicAuthorizerGroup> groupMap;
+  private Map<String, BasicAuthorizerGroupMapping> groupMappingMap;
 
   @JsonProperty
   private Map<String, BasicAuthorizerRole> roleMap;
 
   @JsonCreator
-  public GroupAndRoleMap(
-      @JsonProperty("groupMap") Map<String, BasicAuthorizerGroup> groupMap,
+  public GroupMappingAndRoleMap(
+      @JsonProperty("groupMappingMap") Map<String, BasicAuthorizerGroupMapping> groupMappingMap,
       @JsonProperty("roleMap") Map<String, BasicAuthorizerRole> roleMap
   )
   {
-    this.groupMap = groupMap;
+    this.groupMappingMap = groupMappingMap;
     this.roleMap = roleMap;
   }
 
   @JsonProperty
-  public Map<String, BasicAuthorizerGroup> getGroupMap()
+  public Map<String, BasicAuthorizerGroupMapping> getGroupMappingMap()
   {
-    return groupMap;
+    return groupMappingMap;
   }
 
   @JsonProperty

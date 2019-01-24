@@ -17,26 +17,27 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authentication.db.cache;
+package org.apache.druid.security.basic.escalator.db.cache;
+
+import org.apache.druid.security.basic.escalator.entity.BasicEscalatorCredential;
 
 /**
- * Sends a notification to druid services, containing updated authenticator user map state.
+ * This class is reponsible for maintaining a cache of the escalator database state. The BasicHTTPEscalator
+ * uses an injected BasicEscalatorCacheManager to set escalator credentials.
  */
-public interface BasicAuthenticatorCacheNotifier
+public interface BasicEscalatorCacheManager
 {
   /**
-   * Send the user map state contained in updatedUserMap to all non-coordinator Druid services
+   * Update this cache manager's local state of escalator credential with fresh information pushed by the coordinator.
    *
-   * @param updatedAuthenticatorPrefix Name of authenticator being updated
-   * @param updatedUserMap User map state
+   * @param serializedEscalatorCredentialConfig The updated, serialized escalator credential
    */
-  void addUserUpdate(String updatedAuthenticatorPrefix, byte[] updatedUserMap);
+  void handleEscalatorCredentialUpdate(byte[] serializedEscalatorCredentialConfig);
 
   /**
-   * Send the config state contained in updatedConfig to all non-coordinator Druid services
+   * Return the cache manager's local view of escalator credential.
    *
-   * @param updatedAuthenticatorPrefix Name of authenticator being updated
-   * @param updatedConfig Config state
+   * @return Escalator credential
    */
-  void addConfigUpdate(String updatedAuthenticatorPrefix, byte[] updatedConfig);
+  BasicEscalatorCredential getEscalatorCredential();
 }

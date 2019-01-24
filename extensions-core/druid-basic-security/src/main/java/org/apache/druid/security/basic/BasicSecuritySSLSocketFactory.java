@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.druid.security.basic;
 
 import org.apache.druid.java.util.common.logger.Logger;

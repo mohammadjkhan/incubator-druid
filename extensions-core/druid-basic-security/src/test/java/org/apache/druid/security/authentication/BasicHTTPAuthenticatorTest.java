@@ -26,6 +26,7 @@ import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.metadata.DefaultPasswordProvider;
 import org.apache.druid.security.basic.authentication.BasicHTTPAuthenticator;
 import org.apache.druid.security.basic.authentication.db.cache.BasicAuthenticatorCacheManager;
+import org.apache.druid.security.basic.authentication.entity.BasicAuthConfig;
 import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorCredentialUpdate;
 import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorCredentials;
 import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorUser;
@@ -52,7 +53,7 @@ public class BasicHTTPAuthenticatorTest
       new BasicAuthenticatorCacheManager()
       {
         @Override
-        public void handleAuthenticatorUpdate(String authenticatorPrefix, byte[] serializedUserMap)
+        public void handleAuthenticatorUserMapUpdate(String authenticatorPrefix, byte[] serializedUserMap)
         {
 
         }
@@ -64,17 +65,26 @@ public class BasicHTTPAuthenticatorTest
               "userA", new BasicAuthenticatorUser("userA", USER_A_CREDENTIALS)
           );
         }
+
+        @Override
+        public void handleAuthenticatorConfigUpdate(String authenticatorPrefix, byte[] serializedConfig)
+        {
+
+        }
+
+        @Override
+        public BasicAuthConfig getConfig(String authenticatorPrefix)
+        {
+          return null;
+        }
       }
   );
 
   public static BasicHTTPAuthenticator AUTHENTICATOR = new BasicHTTPAuthenticator(
       CACHE_MANAGER_PROVIDER,
       "basic",
-      null, "basic",
-      new DefaultPasswordProvider("a"),
-      new DefaultPasswordProvider("a"),
-      false,
-      null,
+      "basic", new DefaultPasswordProvider("a"), new DefaultPasswordProvider("a"), false, null, null, false, null,
+      null, null, null, null, null, null, null, null, null,
       null
   );
 

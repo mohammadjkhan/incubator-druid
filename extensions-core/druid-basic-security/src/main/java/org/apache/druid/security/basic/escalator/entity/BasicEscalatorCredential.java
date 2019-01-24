@@ -17,39 +17,34 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authorization.entity;
+package org.apache.druid.security.basic.escalator.entity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public class BasicAuthorizerGroup
+public class BasicEscalatorCredential
 {
-  private final String name;
-  private final Set<String> roles;
+  private final String username;
+  private final String password;
 
-  @JsonCreator
-  public BasicAuthorizerGroup(
-      @JsonProperty("name") String name,
-      @JsonProperty("roles") Set<String> roles
+  public BasicEscalatorCredential(
+      @JsonProperty("username") String username,
+      @JsonProperty("password") String password
   )
   {
-    this.name = name;
-    this.roles = roles == null ? new HashSet<>() : roles;
+    this.username = username;
+    this.password = password;
   }
 
   @JsonProperty
-  public String getName()
+  public String getUsername()
   {
-    return name;
+    return username;
   }
 
   @JsonProperty
-  public Set<String> getRoles()
+  public String getPassword()
   {
-    return roles;
+    return password;
   }
 
   @Override
@@ -62,20 +57,19 @@ public class BasicAuthorizerGroup
       return false;
     }
 
-    BasicAuthorizerGroup that = (BasicAuthorizerGroup) o;
+    BasicEscalatorCredential that = (BasicEscalatorCredential) o;
 
-    if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+    if (getUsername() != null ? !getUsername().equals(that.getUsername()) : that.getUsername() != null) {
       return false;
     }
-    return getRoles() != null ? getRoles().equals(that.getRoles()) : that.getRoles() == null;
-
+    return getPassword() != null ? getPassword().equals(that.getPassword()) : that.getPassword() == null;
   }
 
   @Override
   public int hashCode()
   {
-    int result = getName() != null ? getName().hashCode() : 0;
-    result = 31 * result + (getRoles() != null ? getRoles().hashCode() : 0);
+    int result = getUsername() != null ? getUsername().hashCode() : 0;
+    result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
     return result;
   }
 }

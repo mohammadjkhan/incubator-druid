@@ -83,22 +83,30 @@ public class CoordinatorBasicAuthenticatorResourceTest
             new BasicHTTPAuthenticator(
                 null,
                 AUTHENTICATOR_NAME,
-                null, "test",
+                "test",
                 new DefaultPasswordProvider("druid"),
                 new DefaultPasswordProvider("druid"),
                 null,
                 null,
+                null,
+                false,
+                null,
+                null, null, null, null, null, null, null, null, null,
                 null
             ),
             AUTHENTICATOR_NAME2,
             new BasicHTTPAuthenticator(
                 null,
                 AUTHENTICATOR_NAME2,
-                null, "test",
+                "test",
                 new DefaultPasswordProvider("druid"),
                 new DefaultPasswordProvider("druid"),
                 null,
                 null,
+                null,
+                false,
+                null,
+                null, null, null, null, null, null, null, null, null,
                 null
             )
         )

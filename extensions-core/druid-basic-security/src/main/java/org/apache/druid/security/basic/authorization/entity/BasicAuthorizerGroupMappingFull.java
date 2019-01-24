@@ -25,18 +25,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashSet;
 import java.util.Set;
 
-public class BasicAuthorizerGroupFull
+public class BasicAuthorizerGroupMappingFull
 {
   private final String name;
+  private final String groupPattern;
   private final Set<BasicAuthorizerRole> roles;
 
   @JsonCreator
-  public BasicAuthorizerGroupFull(
+  public BasicAuthorizerGroupMappingFull(
       @JsonProperty("name") String name,
+      @JsonProperty("groupPattern") String groupPattern,
       @JsonProperty("roles") Set<BasicAuthorizerRole> roles
   )
   {
     this.name = name;
+    this.groupPattern = groupPattern;
     this.roles = roles == null ? new HashSet<>() : roles;
   }
 
@@ -44,6 +47,11 @@ public class BasicAuthorizerGroupFull
   public String getName()
   {
     return name;
+  }
+
+  public String getGroupPattern()
+  {
+    return groupPattern;
   }
 
   @JsonProperty
@@ -62,11 +70,16 @@ public class BasicAuthorizerGroupFull
       return false;
     }
 
-    BasicAuthorizerGroupFull that = (BasicAuthorizerGroupFull) o;
+    BasicAuthorizerGroupMappingFull that = (BasicAuthorizerGroupMappingFull) o;
 
     if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
       return false;
     }
+
+    if (getGroupPattern() != null ? !getGroupPattern().equals(that.getGroupPattern()) : that.getGroupPattern() != null) {
+      return false;
+    }
+
     return getRoles() != null ? getRoles().equals(that.getRoles()) : that.getRoles() == null;
 
   }
@@ -75,7 +88,9 @@ public class BasicAuthorizerGroupFull
   public int hashCode()
   {
     int result = getName() != null ? getName().hashCode() : 0;
-    result = 31 * result + (getRoles() != null ? getRoles().hashCode() : 0);
+    result = 31 * result
+             + (getGroupPattern() != null ? getGroupPattern().hashCode() : 0)
+             + (getRoles() != null ? getRoles().hashCode() : 0);
     return result;
   }
 }

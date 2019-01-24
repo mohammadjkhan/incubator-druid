@@ -17,10 +17,9 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authentication.endpoint;
+package org.apache.druid.security.basic.escalator.endpoint;
 
-import org.apache.druid.security.basic.authentication.entity.BasicAuthConfig;
-import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorCredentialUpdate;
+import org.apache.druid.security.basic.escalator.entity.BasicEscalatorCredential;
 
 import javax.ws.rs.core.Response;
 
@@ -29,33 +28,19 @@ import javax.ws.rs.core.Response;
  * inability to selectively inject jetty resources in configure(Binder binder) of the extension module based
  * on node type.
  */
-public interface BasicAuthenticatorResourceHandler
+public interface BasicEscalatorResourceHandler
 {
   // coordinator methods
-  Response getAllUsers(String authenticatorName);
+  Response getEscalatorCredential();
 
-  Response getUser(String authenticatorName, String userName);
+  Response updateEscalatorCredential(BasicEscalatorCredential escalatorCredential);
 
-  Response createUser(String authenticatorName, String userName);
-
-  Response deleteUser(String authenticatorName, String userName);
-
-  Response updateUserCredentials(String authenticatorName, String userName, BasicAuthenticatorCredentialUpdate update);
-
-  Response getCachedSerializedUserMap(String authenticatorName);
-
-  Response getConfig(String authenticatorName);
-
-  Response updateConfig(String authenticatorName, BasicAuthConfig config);
-
-  Response getCachedSerializedConfig(String authenticatorName);
+  Response getCachedSerializedEscalatorCredential();
 
   Response refreshAll();
 
   // non-coordinator methods
-  Response authenticatorUserUpdateListener(String authenticatorName, byte[] serializedUserMap);
-
-  Response authenticatorConfigUpdateListener(String authenticatorName, byte[] serializedConfig);
+  Response escalatorCredentialUpdateListener(byte[] serializedEscalatorCredential);
 
   // common methods
   Response getLoadStatus();

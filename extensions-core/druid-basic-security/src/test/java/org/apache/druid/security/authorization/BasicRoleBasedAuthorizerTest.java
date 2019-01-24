@@ -72,6 +72,7 @@ public class BasicRoleBasedAuthorizerTest
                     AUTHORIZER_NAME,
                     null,
                     null,
+                    null, null,
                     null
                 )
             )
@@ -93,6 +94,7 @@ public class BasicRoleBasedAuthorizerTest
         AUTHORIZER_NAME,
         null,
         null,
+        null, null,
         null
     );
   }
@@ -107,7 +109,7 @@ public class BasicRoleBasedAuthorizerTest
   {
     updater.createUser(AUTHORIZER_NAME, "druid");
     updater.createRole(AUTHORIZER_NAME, "druidRole");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
 
     List<ResourceAction> permissions = Collections.singletonList(
         new ResourceAction(new Resource("testResource", ResourceType.DATASOURCE), Action.WRITE)

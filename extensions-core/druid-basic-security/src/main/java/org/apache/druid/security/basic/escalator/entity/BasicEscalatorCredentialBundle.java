@@ -17,37 +17,35 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authorization.entity;
+package org.apache.druid.security.basic.escalator.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Map;
-
-public class BasicAuthorizerGroupMapBundle
+public class BasicEscalatorCredentialBundle
 {
-  private final Map<String, BasicAuthorizerGroup> groupMap;
-  private final byte[] serializedGroupMap;
+  private final BasicEscalatorCredential escalatorCredential;
+  private final byte[] serializedEscalatorCredential;
 
   @JsonCreator
-  public BasicAuthorizerGroupMapBundle(
-      @JsonProperty("groupMap") Map<String, BasicAuthorizerGroup> groupMap,
-      @JsonProperty("serializedGroupMap") byte[] serializedGroupMap
+  public BasicEscalatorCredentialBundle(
+      @JsonProperty("escalatorCredential") BasicEscalatorCredential credential,
+      @JsonProperty("serializedEscalatorCredential") byte[] serializedEscalatorCredential
   )
   {
-    this.groupMap = groupMap;
-    this.serializedGroupMap = serializedGroupMap;
+    this.escalatorCredential = credential;
+    this.serializedEscalatorCredential = serializedEscalatorCredential;
   }
 
   @JsonProperty
-  public Map<String, BasicAuthorizerGroup> getGroupMap()
+  public BasicEscalatorCredential getEscalatorCredential()
   {
-    return groupMap;
+    return escalatorCredential;
   }
 
   @JsonProperty
-  public byte[] getSerializedGroupMap()
+  public byte[] getSerializedEscalatorCredential()
   {
-    return serializedGroupMap;
+    return serializedEscalatorCredential;
   }
 }

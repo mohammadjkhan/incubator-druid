@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authentication;
+package org.apache.druid.security.basic.authentication.validator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,7 +40,6 @@ public class DBCredentialsValidator implements CredentialsValidator
 {
   private static final Logger LOG = new Logger(DBCredentialsValidator.class);
   private final Provider<BasicAuthenticatorCacheManager> cacheManager;
-  //final BasicAuthenticatorCacheManager cacheManager;
 
   @JsonCreator
   public DBCredentialsValidator(

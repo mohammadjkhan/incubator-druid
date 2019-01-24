@@ -27,7 +27,7 @@ import org.apache.druid.java.util.common.IAE;
 import org.apache.druid.security.basic.BasicAuthDBConfig;
 import org.apache.druid.security.basic.BasicAuthUtils;
 import org.apache.druid.security.basic.authorization.db.cache.BasicAuthorizerCacheManager;
-import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroup;
+import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroupMapping;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerPermission;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerRole;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerUser;
@@ -37,8 +37,12 @@ import org.apache.druid.server.security.AuthenticationResult;
 import org.apache.druid.server.security.Authorizer;
 import org.apache.druid.server.security.Resource;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,7 +59,9 @@ public class BasicRoleBasedAuthorizer implements Authorizer
   public BasicRoleBasedAuthorizer(
       @JacksonInject BasicAuthorizerCacheManager cacheManager,
       @JsonProperty("name") String name,
-      @JsonProperty("initialAdminGroup") String initialAdminGroup,
+      @JsonProperty("initialAdminUser") String initialAdminUser,
+      @JsonProperty("initialAdminRole") String initialAdminRole,
+      @JsonProperty("initialAdminGroupMapping")String initialAdminGroupMapping,
       @JsonProperty("enableCacheNotifications") Boolean enableCacheNotifications,
       @JsonProperty("cacheNotificationTimeout") Long cacheNotificationTimeout
   )
@@ -65,10 +71,21 @@ public class BasicRoleBasedAuthorizer implements Authorizer
     this.dbConfig = new BasicAuthDBConfig(
         null,
         null,
-        initialAdminGroup,
+        initialAdminUser,
+        initialAdminRole,
+        initialAdminGroupMapping,
         enableCacheNotifications == null ? true : enableCacheNotifications,
         cacheNotificationTimeout == null ? BasicAuthDBConfig.DEFAULT_CACHE_NOTIFY_TIMEOUT_MS : cacheNotificationTimeout,
-        0
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null, null,
+        null,
+        null
     );
   }
 
@@ -76,58 +93,55 @@ public class BasicRoleBasedAuthorizer implements Authorizer
   public Access authorize(AuthenticationResult authenticationResult, Resource resource, Action action)
   {
     if (authenticationResult == null) {
-      throw new IAE("WTF? authenticationResult should never be null.");
+      throw new IAE("authenticationResult is null where it should never be.");
     }
 
-    Set<String> roles;
     Map<String, BasicAuthorizerRole> roleMap;
+    Set<String> roleNames = new HashSet<>();
 
-    if (authenticationResult.getContext() != null
-        && authenticationResult.getContext().get(BasicAuthUtils.GROUPS_CONTEXT_KEY) != null) {
-      roles = new HashSet<>();
-      Map<String, BasicAuthorizerGroup> groupMap = cacheManager.getGroupMap(name);
-      if (groupMap == null) {
-        throw new IAE("Could not load groupMap for authorizer [%s]", name);
-      } else {
-        Set<BasicAuthorizerGroup> basicAuthorizerGroups = new HashSet<>();
-        Set<String> groups = (Set<String>) authenticationResult.getContext().get(BasicAuthUtils.GROUPS_CONTEXT_KEY);
-        for (String group : groups) {
-          if (groupMap.get(group) != null) {
-            basicAuthorizerGroups.add(groupMap.get(group));
-          }
-        }
-
-        if (basicAuthorizerGroups.isEmpty()) {
-          return new Access(false);
-        } else {
-          basicAuthorizerGroups.forEach(basicAuthorizerGroup -> roles.addAll(basicAuthorizerGroup.getRoles()));
-        }
-      }
-      roleMap = cacheManager.getGroupRoleMap(name);
-    } else {
-      Map<String, BasicAuthorizerUser> userMap = cacheManager.getUserMap(name);
-      if (userMap == null) {
-        throw new IAE("Could not load userMap for authorizer [%s]", name);
-      } else {
-        BasicAuthorizerUser user = userMap.get(authenticationResult.getIdentity());
-        if (user == null) {
-          return new Access(false);
-        } else {
-          roles = user.getRoles();
-        }
-      }
-      roleMap = cacheManager.getRoleMap(name);
+    Map<String, BasicAuthorizerUser> userMap = cacheManager.getUserMap(name);
+    if (userMap == null) {
+      throw new IAE("Could not load userMap for authorizer [%s]", name);
     }
 
+    Map<String, BasicAuthorizerGroupMapping> groupMappingMap = cacheManager.getGroupMappingMap(name);
+    if (groupMappingMap == null) {
+      throw new IAE("Could not load groupMappingMap for authorizer [%s]", name);
+    }
+
+    BasicAuthorizerUser user = userMap.get(authenticationResult.getIdentity());
+    if (user != null) {
+      roleNames.addAll(user.getRoles());
+      roleMap = cacheManager.getRoleMap(name);
+    } else {
+      Set<LdapName> groupNamesFromLdap = Optional.ofNullable(authenticationResult.getContext())
+                                                 .map(contextMap -> contextMap.get(BasicAuthUtils.GROUPS_CONTEXT_KEY))
+                                                 .map(p -> {
+                                                   if (p instanceof Set) {
+                                                     return (Set<LdapName>) p;
+                                                   } else {
+                                                     return null;
+                                                   }
+                                                 })
+                                                 .orElse(new HashSet<>());
+
+      roleNames.addAll(getRoles(groupMappingMap, groupNamesFromLdap));
+      roleMap = cacheManager.getGroupMappingRoleMap(name);
+    }
     if (roleMap == null) {
       throw new IAE("Could not load roleMap for authorizer [%s]", name);
     }
+    if (roleNames.isEmpty()) {
+      return new Access(false);
+    }
 
-    for (String roleName : roles) {
+    for (String roleName : roleNames) {
       BasicAuthorizerRole role = roleMap.get(roleName);
-      for (BasicAuthorizerPermission permission : role.getPermissions()) {
-        if (permissionCheck(resource, action, permission)) {
-          return new Access(true);
+      if (role != null) {
+        for (BasicAuthorizerPermission permission : role.getPermissions()) {
+          if (permissionCheck(resource, action, permission)) {
+            return new Access(true);
+          }
         }
       }
     }
@@ -149,6 +163,45 @@ public class BasicRoleBasedAuthorizer implements Authorizer
     Pattern resourceNamePattern = permission.getResourceNamePattern();
     Matcher resourceNameMatcher = resourceNamePattern.matcher(resource.getName());
     return resourceNameMatcher.matches();
+  }
+
+  Set<String> getRoles(Map<String, BasicAuthorizerGroupMapping> groupMappingMap, Set<LdapName> groupNamesFromLdap)
+  {
+    Set<String> roles = new HashSet<>();
+
+    if (groupMappingMap.size() == 0) {
+      return roles;
+    }
+
+    for (LdapName groupName : groupNamesFromLdap) {
+      for (Map.Entry<String, BasicAuthorizerGroupMapping> groupMappingEntry : groupMappingMap.entrySet()) {
+        BasicAuthorizerGroupMapping groupMapping = groupMappingEntry.getValue();
+        String mask = groupMapping.getGroupPattern();
+        try {
+          if (mask.startsWith("*,")) {
+            LdapName ln = new LdapName(mask.substring(2));
+            if (groupName.startsWith(ln)) {
+              roles.addAll(groupMapping.getRoles());
+            }
+          } else if (mask.endsWith(",*")) {
+            LdapName ln = new LdapName(mask.substring(0, mask.length() - 2));
+            if (groupName.endsWith(ln)) {
+              roles.addAll(groupMapping.getRoles());
+            }
+          } else {
+            LdapName ln = new LdapName(mask);
+            if (groupName.equals(ln)) {
+              roles.addAll(groupMapping.getRoles());
+            }
+          }
+        }
+        catch (InvalidNameException e) {
+          throw new RuntimeException(String.format(Locale.getDefault(),
+                                                   "Configuration problem - Invalid groupMapping '%s'", mask));
+        }
+      }
+    }
+    return roles;
   }
 
   public BasicAuthDBConfig getDbConfig()

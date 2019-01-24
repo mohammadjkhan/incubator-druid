@@ -27,26 +27,62 @@ public class BasicAuthDBConfig
 
   private final PasswordProvider initialAdminPassword;
   private final PasswordProvider initialInternalClientPassword;
-  private final String initialAdminGroup;
+  private final String initialAdminUser;
+  private final String initialAdminRole;
+  private final String initialAdminGroupMapping;
   private final boolean enableCacheNotifications;
   private final long cacheNotificationTimeout;
   private final int iterations;
+  private final String url;
+  private final String bindUser;
+  private final PasswordProvider bindPassword;
+  private final String baseDn;
+  private final String userSearch;
+  private final String userAttribute;
+  private final String[] groupFilters;
+  private final Integer credentialVerifyDuration;
+  private final Integer credentialMaxDuration;
+  private final Integer credentialCacheSize;
 
   public BasicAuthDBConfig(
       final PasswordProvider initialAdminPassword,
       final PasswordProvider initialInternalClientPassword,
-      final String initialAdminGroup,
+      final String initialAdminUser,
+      final String initialAdminRole,
+      final String initialAdminGroupMapping,
       final Boolean enableCacheNotifications,
       final Long cacheNotificationTimeout,
-      final int iterations
+      final int credentialIterations,
+      final String url,
+      final String bindUser,
+      final PasswordProvider bindPassword,
+      final String baseDn,
+      final String userSearch,
+      final String userAttribute,
+      final String[] groupFilters,
+      final Integer credentialVerifyDuration,
+      final Integer credentialMaxDuration,
+      final Integer credentialCacheSize
   )
   {
     this.initialAdminPassword = initialAdminPassword;
     this.initialInternalClientPassword = initialInternalClientPassword;
-    this.initialAdminGroup = initialAdminGroup;
+    this.initialAdminUser = initialAdminUser;
+    this.initialAdminRole = initialAdminRole;
+    this.initialAdminGroupMapping = initialAdminGroupMapping;
     this.enableCacheNotifications = enableCacheNotifications;
     this.cacheNotificationTimeout = cacheNotificationTimeout;
-    this.iterations = iterations;
+    this.iterations = credentialIterations;
+    this.url = url;
+    this.bindUser = bindUser;
+    this.bindPassword = bindPassword;
+    this.baseDn = baseDn;
+    this.userSearch = userSearch;
+    this.userAttribute = userAttribute;
+    this.groupFilters = groupFilters;
+    this.credentialVerifyDuration = credentialVerifyDuration;
+    this.credentialMaxDuration = credentialMaxDuration;
+    this.credentialCacheSize = credentialCacheSize;
   }
 
   public PasswordProvider getInitialAdminPassword()
@@ -59,9 +95,19 @@ public class BasicAuthDBConfig
     return initialInternalClientPassword;
   }
 
-  public String getInitialAdminGroup()
+  public String getInitialAdminUser()
   {
-    return initialAdminGroup;
+    return initialAdminUser;
+  }
+
+  public String getInitialAdminRole()
+  {
+    return initialAdminRole;
+  }
+
+  public String getInitialAdminGroupMapping()
+  {
+    return initialAdminGroupMapping;
   }
 
   public boolean isEnableCacheNotifications()
@@ -77,5 +123,55 @@ public class BasicAuthDBConfig
   public int getIterations()
   {
     return iterations;
+  }
+
+  public String getUrl()
+  {
+    return url;
+  }
+
+  public String getBindUser()
+  {
+    return bindUser;
+  }
+
+  public PasswordProvider getBindPassword()
+  {
+    return bindPassword;
+  }
+
+  public String getBaseDn()
+  {
+    return baseDn;
+  }
+
+  public String getUserSearch()
+  {
+    return userSearch;
+  }
+
+  public String getUserAttribute()
+  {
+    return userAttribute;
+  }
+
+  public String[] getGroupFilters()
+  {
+    return groupFilters;
+  }
+
+  public Integer getCredentialVerifyDuration()
+  {
+    return credentialVerifyDuration;
+  }
+
+  public Integer getCredentialMaxDuration()
+  {
+    return credentialMaxDuration;
+  }
+
+  public Integer getCredentialCacheSize()
+  {
+    return credentialCacheSize;
   }
 }

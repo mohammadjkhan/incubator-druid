@@ -25,12 +25,14 @@ import org.apache.druid.java.util.common.ISE;
 import org.apache.druid.java.util.common.RE;
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.logger.Logger;
+import org.apache.druid.security.basic.authentication.entity.BasicAuthConfig;
 import org.apache.druid.security.basic.authentication.entity.BasicAuthenticatorUser;
-import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroup;
+import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroupMapping;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerRole;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerUser;
-import org.apache.druid.security.basic.authorization.entity.GroupAndRoleMap;
+import org.apache.druid.security.basic.authorization.entity.GroupMappingAndRoleMap;
 import org.apache.druid.security.basic.authorization.entity.UserAndRoleMap;
+import org.apache.druid.security.basic.escalator.entity.BasicEscalatorCredential;
 
 import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
@@ -51,6 +53,7 @@ public class BasicAuthUtils
   private static final Logger log = new Logger(BasicAuthUtils.class);
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   public static final String ADMIN_NAME = "admin";
+  public static final String ADMIN_GROUP_MAPPING_NAME = "adminGroup";
   public static final String INTERNAL_USER_NAME = "druid_system";
   public static final String GROUPS_CONTEXT_KEY = "groups";
 
@@ -77,8 +80,8 @@ public class BasicAuthUtils
       {
       };
 
-  public static final TypeReference AUTHORIZER_GROUP_MAP_TYPE_REFERENCE =
-      new TypeReference<Map<String, BasicAuthorizerGroup>>()
+  public static final TypeReference AUTHORIZER_GROUP_MAPPING_MAP_TYPE_REFERENCE =
+      new TypeReference<Map<String, BasicAuthorizerGroupMapping>>()
       {
       };
 
@@ -92,8 +95,8 @@ public class BasicAuthUtils
       {
       };
 
-  public static final TypeReference AUTHORIZER_GROUP_AND_ROLE_MAP_TYPE_REFERENCE =
-      new TypeReference<GroupAndRoleMap>()
+  public static final TypeReference AUTHORIZER_GROUP_MAPPING_AND_ROLE_MAP_TYPE_REFERENCE =
+      new TypeReference<GroupMappingAndRoleMap>()
       {
       };
 
@@ -172,7 +175,7 @@ public class BasicAuthUtils
         userMap = objectMapper.readValue(userMapBytes, AUTHENTICATOR_USER_MAP_TYPE_REFERENCE);
       }
       catch (IOException ioe) {
-        throw new RuntimeException(ioe);
+        throw new RuntimeException("Couldn't deserialize authenticator userMap!", ioe);
       }
     }
     return userMap;
@@ -187,7 +190,7 @@ public class BasicAuthUtils
       return objectMapper.writeValueAsBytes(userMap);
     }
     catch (IOException ioe) {
-      throw new ISE(ioe, "WTF? Couldn't serialize userMap!");
+      throw new ISE(ioe, "Couldn't serialize authenticator userMap!");
     }
   }
 
@@ -204,7 +207,7 @@ public class BasicAuthUtils
         userMap = objectMapper.readValue(userMapBytes, BasicAuthUtils.AUTHORIZER_USER_MAP_TYPE_REFERENCE);
       }
       catch (IOException ioe) {
-        throw new RuntimeException(ioe);
+        throw new RuntimeException("Couldn't deserialize authorizer userMap!", ioe);
       }
     }
     return userMap;
@@ -216,36 +219,36 @@ public class BasicAuthUtils
       return objectMapper.writeValueAsBytes(userMap);
     }
     catch (IOException ioe) {
-      throw new ISE(ioe, "WTF? Couldn't serialize userMap!");
+      throw new ISE(ioe, "Couldn't serialize authorizer userMap!");
     }
   }
 
-  public static Map<String, BasicAuthorizerGroup> deserializeAuthorizerGroupMap(
+  public static Map<String, BasicAuthorizerGroupMapping> deserializeAuthorizerGroupMappingMap(
       ObjectMapper objectMapper,
-      byte[] groupMapBytes
+      byte[] groupMappingMapBytes
   )
   {
-    Map<String, BasicAuthorizerGroup> groupMap;
-    if (groupMapBytes == null) {
-      groupMap = new HashMap<>();
+    Map<String, BasicAuthorizerGroupMapping> groupMappingMap;
+    if (groupMappingMapBytes == null) {
+      groupMappingMap = new HashMap<>();
     } else {
       try {
-        groupMap = objectMapper.readValue(groupMapBytes, BasicAuthUtils.AUTHORIZER_GROUP_MAP_TYPE_REFERENCE);
+        groupMappingMap = objectMapper.readValue(groupMappingMapBytes, BasicAuthUtils.AUTHORIZER_GROUP_MAPPING_MAP_TYPE_REFERENCE);
       }
       catch (IOException ioe) {
-        throw new RuntimeException(ioe);
+        throw new RuntimeException("Couldn't deserialize authorizer groupMappingMap!", ioe);
       }
     }
-    return groupMap;
+    return groupMappingMap;
   }
 
-  public static byte[] serializeAuthorizerGroupMap(ObjectMapper objectMapper, Map<String, BasicAuthorizerGroup> groupMap)
+  public static byte[] serializeAuthorizerGroupMappingMap(ObjectMapper objectMapper, Map<String, BasicAuthorizerGroupMapping> groupMappingMap)
   {
     try {
-      return objectMapper.writeValueAsBytes(groupMap);
+      return objectMapper.writeValueAsBytes(groupMappingMap);
     }
     catch (IOException ioe) {
-      throw new ISE(ioe, "Couldn't serialize groupMap!");
+      throw new ISE(ioe, "Couldn't serialize authorizer groupMappingMap!");
     }
   }
 
@@ -262,7 +265,7 @@ public class BasicAuthUtils
         roleMap = objectMapper.readValue(roleMapBytes, BasicAuthUtils.AUTHORIZER_ROLE_MAP_TYPE_REFERENCE);
       }
       catch (IOException ioe) {
-        throw new RuntimeException(ioe);
+        throw new RuntimeException("Couldn't deserialize authorizer roleMap!", ioe);
       }
     }
     return roleMap;
@@ -274,7 +277,69 @@ public class BasicAuthUtils
       return objectMapper.writeValueAsBytes(roleMap);
     }
     catch (IOException ioe) {
-      throw new ISE(ioe, "WTF? Couldn't serialize roleMap!");
+      throw new ISE(ioe, "Couldn't serialize authorizer roleMap!");
+    }
+  }
+
+  @Nullable
+  public static BasicAuthConfig deserializeAuthenticatorConfig(
+      ObjectMapper objectMapper,
+      byte[] configBytes
+  )
+  {
+    BasicAuthConfig config = null;
+    if (configBytes != null) {
+      try {
+        config = objectMapper.readValue(configBytes, BasicAuthConfig.class);
+      }
+      catch (IOException ioe) {
+        throw new RuntimeException("Couldn't deserialize authenticator config!", ioe);
+      }
+    }
+    return config;
+  }
+
+  public static byte[] serializeAuthenticatorConfig(
+      ObjectMapper objectMapper,
+      BasicAuthConfig config
+  )
+  {
+    try {
+      return objectMapper.writeValueAsBytes(config);
+    }
+    catch (IOException ioe) {
+      throw new ISE(ioe, "Couldn't serialize authenticator config!");
+    }
+  }
+
+  @Nullable
+  public static BasicEscalatorCredential deserializeEscalatorCredential(
+      ObjectMapper objectMapper,
+      byte[] escalatorCredentialBytes
+  )
+  {
+    BasicEscalatorCredential escalatorCredential = null;
+    if (escalatorCredentialBytes != null) {
+      try {
+        escalatorCredential = objectMapper.readValue(escalatorCredentialBytes, BasicEscalatorCredential.class);
+      }
+      catch (IOException ioe) {
+        throw new RuntimeException("Couldn't deserialize escalator credential!", ioe);
+      }
+    }
+    return escalatorCredential;
+  }
+
+  public static byte[] serializeEscalatorCredential(
+      ObjectMapper objectMapper,
+      BasicEscalatorCredential escalatorCredential
+  )
+  {
+    try {
+      return objectMapper.writeValueAsBytes(escalatorCredential);
+    }
+    catch (IOException ioe) {
+      throw new ISE(ioe, "Couldn't serialize escalator credential!");
     }
   }
 }

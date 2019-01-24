@@ -24,10 +24,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.inject.Provider;
+import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.metadata.PasswordProvider;
 import org.apache.druid.security.basic.BasicAuthDBConfig;
 import org.apache.druid.security.basic.BasicAuthUtils;
 import org.apache.druid.security.basic.authentication.db.cache.BasicAuthenticatorCacheManager;
+import org.apache.druid.security.basic.authentication.validator.CredentialsValidator;
+import org.apache.druid.security.basic.authentication.validator.DBCredentialsValidator;
 import org.apache.druid.server.security.AuthConfig;
 import org.apache.druid.server.security.AuthenticationResult;
 import org.apache.druid.server.security.Authenticator;
@@ -49,23 +52,37 @@ import java.util.Map;
 @JsonTypeName("basic")
 public class BasicHTTPAuthenticator implements Authenticator
 {
+  private static final Logger LOG = new Logger(BasicHTTPAuthenticator.class);
+
   private final Provider<BasicAuthenticatorCacheManager> cacheManager;
   private final String name;
   private final String authorizerName;
   private final BasicAuthDBConfig dbConfig;
   private final CredentialsValidator credentialsValidator;
+  private final boolean skipOnFailure;
 
   @JsonCreator
   public BasicHTTPAuthenticator(
       @JacksonInject Provider<BasicAuthenticatorCacheManager> cacheManager,
       @JsonProperty("name") String name,
-      @JsonProperty("credentialsValidator") CredentialsValidator credentialsValidator,
       @JsonProperty("authorizerName") String authorizerName,
       @JsonProperty("initialAdminPassword") PasswordProvider initialAdminPassword,
       @JsonProperty("initialInternalClientPassword") PasswordProvider initialInternalClientPassword,
       @JsonProperty("enableCacheNotifications") Boolean enableCacheNotifications,
       @JsonProperty("cacheNotificationTimeout") Long cacheNotificationTimeout,
-      @JsonProperty("credentialIterations") Integer credentialIterations
+      @JsonProperty("credentialIterations") Integer credentialIterations,
+      @JsonProperty("skipOnFailure") Boolean skipOnFailure,
+      @JsonProperty("credentialsValidator") CredentialsValidator credentialsValidator,
+      @JsonProperty("credentialsValidator.url") String url,
+      @JsonProperty("credentialsValidator.bindUser") String bindUser,
+      @JsonProperty("credentialsValidator.bindPassword") PasswordProvider bindPassword,
+      @JsonProperty("credentialsValidator.baseDn") String baseDn,
+      @JsonProperty("credentialsValidator.userSearch") String userSearch,
+      @JsonProperty("credentialsValidator.userAttribute") String userAttribute,
+      @JsonProperty("credentialsValidator.groupFilters") String[] groupFilters,
+      @JsonProperty("credentialsValidator.credentialVerifyDuration") Integer credentialVerifyDuration,
+      @JsonProperty("credentialsValidator.credentialMaxDuration") Integer credentialMaxDuration,
+      @JsonProperty("credentialsValidator.credentialCacheSize") Integer credentialCacheSize
   )
   {
     this.name = name;
@@ -74,9 +91,21 @@ public class BasicHTTPAuthenticator implements Authenticator
         initialAdminPassword,
         initialInternalClientPassword,
         null,
+        null,
+        null,
         enableCacheNotifications == null ? true : enableCacheNotifications,
         cacheNotificationTimeout == null ? BasicAuthDBConfig.DEFAULT_CACHE_NOTIFY_TIMEOUT_MS : cacheNotificationTimeout,
-        credentialIterations == null ? BasicAuthUtils.DEFAULT_KEY_ITERATIONS : credentialIterations
+        credentialIterations == null ? BasicAuthUtils.DEFAULT_KEY_ITERATIONS : credentialIterations,
+        url,
+        bindUser,
+        bindPassword,
+        baseDn,
+        userSearch,
+        userAttribute,
+        groupFilters,
+        credentialVerifyDuration,
+        credentialMaxDuration,
+        credentialCacheSize
     );
     this.cacheManager = cacheManager;
     if (credentialsValidator == null) {
@@ -84,6 +113,7 @@ public class BasicHTTPAuthenticator implements Authenticator
     } else {
       this.credentialsValidator = credentialsValidator;
     }
+    this.skipOnFailure = skipOnFailure;
   }
 
   @Override
@@ -188,7 +218,12 @@ public class BasicHTTPAuthenticator implements Authenticator
         servletRequest.setAttribute(AuthConfig.DRUID_AUTHENTICATION_RESULT, authenticationResult);
         filterChain.doFilter(servletRequest, servletResponse);
       } else {
-        httpResp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        if (skipOnFailure) {
+          LOG.info("Skipping failed authenticator %s ", name);
+          filterChain.doFilter(servletRequest, servletResponse);
+        } else {
+          httpResp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
       }
     }
 

@@ -33,8 +33,8 @@ import org.apache.druid.security.basic.authorization.BasicRoleBasedAuthorizer;
 import org.apache.druid.security.basic.authorization.db.updater.CoordinatorBasicAuthorizerMetadataStorageUpdater;
 import org.apache.druid.security.basic.authorization.endpoint.BasicAuthorizerResource;
 import org.apache.druid.security.basic.authorization.endpoint.CoordinatorBasicAuthorizerResourceHandler;
-import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroup;
-import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroupFull;
+import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroupMapping;
+import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerGroupMappingFull;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerPermission;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerRole;
 import org.apache.druid.security.basic.authorization.entity.BasicAuthorizerRoleFull;
@@ -55,6 +55,7 @@ import org.junit.rules.ExpectedException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,6 +95,7 @@ public class CoordinatorBasicAuthorizerResourceTest
                 AUTHORIZER_NAME,
                 null,
                 null,
+                null, null,
                 null
             ),
             AUTHORIZER_NAME2,
@@ -102,14 +104,16 @@ public class CoordinatorBasicAuthorizerResourceTest
                 AUTHORIZER_NAME2,
                 null,
                 null,
+                null, null,
                 null
             ),
             AUTHORIZER_NAME3,
             new BasicRoleBasedAuthorizer(
                 null,
                 AUTHORIZER_NAME3,
-                "adminGroup",
                 null,
+                null,
+                "adminGroup", null,
                 null
             )
         )
@@ -159,21 +163,21 @@ public class CoordinatorBasicAuthorizerResourceTest
         response.getEntity()
     );
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(
         ImmutableSet.of(),
         response.getEntity()
     );
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME2);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME2);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(
         ImmutableSet.of(),
         response.getEntity()
     );
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME3);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME3);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(
         ImmutableSet.of("adminGroup"),
@@ -183,16 +187,16 @@ public class CoordinatorBasicAuthorizerResourceTest
     resource.createUser(req, AUTHORIZER_NAME, "druid");
     resource.createUser(req, AUTHORIZER_NAME, "druid2");
     resource.createUser(req, AUTHORIZER_NAME, "druid3");
-    resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
-    resource.createGroup(req, AUTHORIZER_NAME, "druid2Group");
-    resource.createGroup(req, AUTHORIZER_NAME, "druid3Group");
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druid2Group", new BasicAuthorizerGroupMapping("druid2Group", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druid3Group", new BasicAuthorizerGroupMapping("druid3Group", "", new HashSet<>()));
 
     resource.createUser(req, AUTHORIZER_NAME2, "druid4");
     resource.createUser(req, AUTHORIZER_NAME2, "druid5");
     resource.createUser(req, AUTHORIZER_NAME2, "druid6");
-    resource.createGroup(req, AUTHORIZER_NAME2, "druid4Group");
-    resource.createGroup(req, AUTHORIZER_NAME2, "druid5Group");
-    resource.createGroup(req, AUTHORIZER_NAME2, "druid6Group");
+    resource.createGroupMapping(req, AUTHORIZER_NAME2, "druid4Group", new BasicAuthorizerGroupMapping("druid4Group", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME2, "druid5Group", new BasicAuthorizerGroupMapping("druid5roup", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME2, "druid6Group", new BasicAuthorizerGroupMapping("druid6Group", "", new HashSet<>()));
 
     Set<String> expectedUsers = ImmutableSet.of(
         BasicAuthUtils.ADMIN_NAME,
@@ -230,11 +234,11 @@ public class CoordinatorBasicAuthorizerResourceTest
         "druid6Group"
     );
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedGroups, response.getEntity());
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME2);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME2);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedGroups2, response.getEntity());
   }
@@ -280,16 +284,16 @@ public class CoordinatorBasicAuthorizerResourceTest
   @Test
   public void testGetAllGroups()
   {
-    Response response = resource.getAllGroups(req, AUTHORIZER_NAME);
+    Response response = resource.getAllGroupMappings(req, AUTHORIZER_NAME);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(
         ImmutableSet.of(),
         response.getEntity()
     );
 
-    resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
-    resource.createGroup(req, AUTHORIZER_NAME, "druid2Group");
-    resource.createGroup(req, AUTHORIZER_NAME, "druid3Group");
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druid2Group", new BasicAuthorizerGroupMapping("druid2Group", "", new HashSet<>()));
+    resource.createGroupMapping(req, AUTHORIZER_NAME, "druid3Group", new BasicAuthorizerGroupMapping("druid3Group", "", new HashSet<>()));
 
     Set<String> expectedUsers = ImmutableSet.of(
         "druidGroup",
@@ -297,7 +301,7 @@ public class CoordinatorBasicAuthorizerResourceTest
         "druid3Group"
     );
 
-    response = resource.getAllGroups(req, AUTHORIZER_NAME);
+    response = resource.getAllGroupMappings(req, AUTHORIZER_NAME);
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedUsers, response.getEntity());
   }
@@ -359,28 +363,28 @@ public class CoordinatorBasicAuthorizerResourceTest
   @Test
   public void testCreateDeleteGroup()
   {
-    Response response = resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
+    Response response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(200, response.getStatus());
 
-    BasicAuthorizerGroup expectedGroup = new BasicAuthorizerGroup(
+    BasicAuthorizerGroupMapping expectedGroup = new BasicAuthorizerGroupMapping(
         "druidGroup",
-        ImmutableSet.of()
+        "", ImmutableSet.of()
     );
     Assert.assertEquals(expectedGroup, response.getEntity());
 
-    response = resource.deleteGroup(req, AUTHORIZER_NAME, "druidGroup");
+    response = resource.deleteGroupMapping(req, AUTHORIZER_NAME, "druidGroup");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.deleteGroup(req, AUTHORIZER_NAME, "druidGroup");
+    response = resource.deleteGroupMapping(req, AUTHORIZER_NAME, "druidGroup");
     Assert.assertEquals(400, response.getStatus());
-    Assert.assertEquals(errorMapWithMsg("Group [druidGroup] does not exist."), response.getEntity());
+    Assert.assertEquals(errorMapWithMsg("Group mapping [druidGroup] does not exist."), response.getEntity());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(400, response.getStatus());
-    Assert.assertEquals(errorMapWithMsg("Group [druidGroup] does not exist."), response.getEntity());
+    Assert.assertEquals(errorMapWithMsg("Group mapping [druidGroup] does not exist."), response.getEntity());
   }
 
   @Test
@@ -455,18 +459,18 @@ public class CoordinatorBasicAuthorizerResourceTest
     Response response = resource.createRole(req, AUTHORIZER_NAME, "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
+    response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(200, response.getStatus());
 
-    BasicAuthorizerGroup expectedGroup = new BasicAuthorizerGroup(
+    BasicAuthorizerGroupMapping expectedGroup = new BasicAuthorizerGroupMapping(
         "druidGroup",
-        ImmutableSet.of("druidRole")
+        "", ImmutableSet.of("druidRole")
     );
     Assert.assertEquals(expectedGroup, response.getEntity());
 
@@ -475,14 +479,14 @@ public class CoordinatorBasicAuthorizerResourceTest
     BasicAuthorizerRole expectedRole = new BasicAuthorizerRole("druidRole", ImmutableList.of());
     Assert.assertEquals(expectedRole, response.getEntity());
 
-    response = resource.unassignRoleFromGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
+    response = resource.unassignRoleFromGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(200, response.getStatus());
-    expectedGroup = new BasicAuthorizerGroup(
+    expectedGroup = new BasicAuthorizerGroupMapping(
         "druidGroup",
-        ImmutableSet.of()
+        "", ImmutableSet.of()
     );
     Assert.assertEquals(expectedGroup, response.getEntity());
 
@@ -509,16 +513,16 @@ public class CoordinatorBasicAuthorizerResourceTest
     response = resource.assignRoleToUser(req, AUTHORIZER_NAME, "druid2", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
+    response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.createGroup(req, AUTHORIZER_NAME, "druid2Group");
+    response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druid2Group", new BasicAuthorizerGroupMapping("druid2Group", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druid2Group", "druidRole");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druid2Group", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
     response = resource.getUser(req, AUTHORIZER_NAME, "druid", null);
@@ -538,19 +542,19 @@ public class CoordinatorBasicAuthorizerResourceTest
     Assert.assertEquals(expectedUser2, response.getEntity());
 
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(200, response.getStatus());
-    BasicAuthorizerGroup expectedGroup = new BasicAuthorizerGroup(
+    BasicAuthorizerGroupMapping expectedGroup = new BasicAuthorizerGroupMapping(
         "druidGroup",
-        ImmutableSet.of("druidRole")
+        "", ImmutableSet.of("druidRole")
     );
     Assert.assertEquals(expectedGroup, response.getEntity());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druid2Group", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druid2Group", null);
     Assert.assertEquals(200, response.getStatus());
-    BasicAuthorizerGroup expectedGroup2 = new BasicAuthorizerGroup(
+    BasicAuthorizerGroupMapping expectedGroup2 = new BasicAuthorizerGroupMapping(
         "druid2Group",
-        ImmutableSet.of("druidRole")
+        "", ImmutableSet.of("druidRole")
     );
     Assert.assertEquals(expectedGroup2, response.getEntity());
 
@@ -578,19 +582,19 @@ public class CoordinatorBasicAuthorizerResourceTest
     );
     Assert.assertEquals(expectedUser2, response.getEntity());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", null);
     Assert.assertEquals(200, response.getStatus());
-    expectedGroup = new BasicAuthorizerGroup(
+    expectedGroup = new BasicAuthorizerGroupMapping(
         "druidGroup",
-        ImmutableSet.of()
+        "", ImmutableSet.of()
     );
     Assert.assertEquals(expectedGroup, response.getEntity());
 
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druid2Group", null);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druid2Group", null);
     Assert.assertEquals(200, response.getStatus());
-    expectedGroup2 = new BasicAuthorizerGroup(
+    expectedGroup2 = new BasicAuthorizerGroupMapping(
         "druid2Group",
-        ImmutableSet.of()
+        "", ImmutableSet.of()
     );
     Assert.assertEquals(expectedGroup2, response.getEntity());
   }
@@ -651,10 +655,10 @@ public class CoordinatorBasicAuthorizerResourceTest
     response = resource.createUser(req, AUTHORIZER_NAME, "druid2");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.createGroup(req, AUTHORIZER_NAME, "druidGroup");
+    response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druidGroup", new BasicAuthorizerGroupMapping("druidGroup", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.createGroup(req, AUTHORIZER_NAME, "druid2Group");
+    response = resource.createGroupMapping(req, AUTHORIZER_NAME, "druid2Group", new BasicAuthorizerGroupMapping("druid2Group", "", new HashSet<>()));
     Assert.assertEquals(200, response.getStatus());
 
     response = resource.createRole(req, AUTHORIZER_NAME, "druidRole");
@@ -693,16 +697,16 @@ public class CoordinatorBasicAuthorizerResourceTest
     response = resource.assignRoleToUser(req, AUTHORIZER_NAME, "druid2", "druidRole2");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole2");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole2");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druid2Group", "druidRole");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druid2Group", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.assignRoleToGroup(req, AUTHORIZER_NAME, "druid2Group", "druidRole2");
+    response = resource.assignRoleToGroupMapping(req, AUTHORIZER_NAME, "druid2Group", "druidRole2");
     Assert.assertEquals(200, response.getStatus());
 
     BasicAuthorizerRole expectedRole = new BasicAuthorizerRole("druidRole", BasicAuthorizerPermission.makePermissionList(perms));
@@ -719,13 +723,13 @@ public class CoordinatorBasicAuthorizerResourceTest
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedUserFull2, response.getEntity());
 
-    BasicAuthorizerGroupFull expectedGroupFull = new BasicAuthorizerGroupFull("druidGroup", expectedRoles);
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druidGroup", "");
+    BasicAuthorizerGroupMappingFull expectedGroupFull = new BasicAuthorizerGroupMappingFull("druidGroup", "", expectedRoles);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "");
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedGroupFull, response.getEntity());
 
-    BasicAuthorizerGroupFull expectedGroupFull2 = new BasicAuthorizerGroupFull("druid2Group", expectedRoles);
-    response = resource.getGroup(req, AUTHORIZER_NAME, "druid2Group", "");
+    BasicAuthorizerGroupMappingFull expectedGroupFull2 = new BasicAuthorizerGroupMappingFull("druid2Group", "", expectedRoles);
+    response = resource.getGroupMapping(req, AUTHORIZER_NAME, "druid2Group", "");
     Assert.assertEquals(200, response.getStatus());
     Assert.assertEquals(expectedGroupFull2, response.getEntity());
 
@@ -787,10 +791,10 @@ public class CoordinatorBasicAuthorizerResourceTest
     response = resource.unassignRoleFromUser(req, AUTHORIZER_NAME, "druid2", "druidRole2");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.unassignRoleFromGroup(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
+    response = resource.unassignRoleFromGroupMapping(req, AUTHORIZER_NAME, "druidGroup", "druidRole");
     Assert.assertEquals(200, response.getStatus());
 
-    response = resource.unassignRoleFromGroup(req, AUTHORIZER_NAME, "druid2Group", "druidRole2");
+    response = resource.unassignRoleFromGroupMapping(req, AUTHORIZER_NAME, "druid2Group", "druidRole2");
     Assert.assertEquals(200, response.getStatus());
 
 

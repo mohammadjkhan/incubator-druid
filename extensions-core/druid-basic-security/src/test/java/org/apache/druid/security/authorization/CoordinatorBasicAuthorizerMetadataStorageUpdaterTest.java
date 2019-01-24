@@ -102,6 +102,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
                     AUTHORIZER_NAME,
                     null,
                     null,
+                    null, null,
                     null
                 )
             )
@@ -201,7 +202,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
   {
     updater.createUser(AUTHORIZER_NAME, "druid");
     updater.createRole(AUTHORIZER_NAME, "druidRole");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
 
     Map<String, BasicAuthorizerUser> expectedUserMap = new HashMap<>(BASE_USER_MAP);
     expectedUserMap.put("druid", new BasicAuthorizerUser("druid", ImmutableSet.of("druidRole")));
@@ -222,7 +223,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
     Assert.assertEquals(expectedUserMap, actualUserMap);
     Assert.assertEquals(expectedRoleMap, actualRoleMap);
 
-    updater.unassignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.unassignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
     expectedUserMap.put("druid", new BasicAuthorizerUser("druid", ImmutableSet.of()));
     actualUserMap = BasicAuthUtils.deserializeAuthorizerUserMap(
         objectMapper,
@@ -239,7 +240,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
     expectedException.expect(BasicSecurityDBResourceException.class);
     expectedException.expectMessage("User [nonUser] does not exist.");
     updater.createRole(AUTHORIZER_NAME, "druid");
-    updater.assignRole(AUTHORIZER_NAME, "nonUser", "druid");
+    updater.assignUserRole(AUTHORIZER_NAME, "nonUser", "druid");
   }
 
   @Test
@@ -248,7 +249,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
     expectedException.expect(BasicSecurityDBResourceException.class);
     expectedException.expectMessage("Role [nonRole] does not exist.");
     updater.createUser(AUTHORIZER_NAME, "druid");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "nonRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "nonRole");
   }
 
   @Test
@@ -258,8 +259,8 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
     expectedException.expectMessage("User [druid] already has role [druidRole].");
     updater.createUser(AUTHORIZER_NAME, "druid");
     updater.createRole(AUTHORIZER_NAME, "druidRole");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "druidRole");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
   }
 
   @Test
@@ -290,7 +291,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
     Assert.assertEquals(expectedUserMap, actualUserMap);
     Assert.assertEquals(expectedRoleMap, actualRoleMap);
 
-    updater.unassignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.unassignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
   }
 
   // role and permission tests
@@ -299,7 +300,7 @@ public class CoordinatorBasicAuthorizerMetadataStorageUpdaterTest
   {
     updater.createUser(AUTHORIZER_NAME, "druid");
     updater.createRole(AUTHORIZER_NAME, "druidRole");
-    updater.assignRole(AUTHORIZER_NAME, "druid", "druidRole");
+    updater.assignUserRole(AUTHORIZER_NAME, "druid", "druidRole");
 
     List<ResourceAction> permsToAdd = ImmutableList.of(
         new ResourceAction(

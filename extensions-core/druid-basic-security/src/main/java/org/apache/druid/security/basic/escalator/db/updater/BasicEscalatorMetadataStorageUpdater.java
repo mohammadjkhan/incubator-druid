@@ -17,26 +17,26 @@
  * under the License.
  */
 
-package org.apache.druid.security.basic.authentication.db.cache;
+package org.apache.druid.security.basic.escalator.db.updater;
+
+import org.apache.druid.security.basic.escalator.entity.BasicEscalatorCredential;
 
 /**
- * Sends a notification to druid services, containing updated authenticator user map state.
+ * Implementations of this interface are responsible for connecting directly to the metadata storage,
+ * modifying the escalator database state or reading it. This interface is used by the
+ * MetadataStoragePollingBasicEscalatorCacheManager (for reads) and the CoordinatorBasicEscalatorResourceHandler
+ * (for handling configuration read/writes).
  */
-public interface BasicAuthenticatorCacheNotifier
+public interface BasicEscalatorMetadataStorageUpdater
 {
-  /**
-   * Send the user map state contained in updatedUserMap to all non-coordinator Druid services
-   *
-   * @param updatedAuthenticatorPrefix Name of authenticator being updated
-   * @param updatedUserMap User map state
-   */
-  void addUserUpdate(String updatedAuthenticatorPrefix, byte[] updatedUserMap);
+  void updateEscalatorCredential(BasicEscalatorCredential escalatorCredential);
 
-  /**
-   * Send the config state contained in updatedConfig to all non-coordinator Druid services
-   *
-   * @param updatedAuthenticatorPrefix Name of authenticator being updated
-   * @param updatedConfig Config state
-   */
-  void addConfigUpdate(String updatedAuthenticatorPrefix, byte[] updatedConfig);
+  BasicEscalatorCredential getCachedEscalatorCredential();
+
+  byte[] getCachedSerializedEscalatorCredential();
+
+  byte[] getCurrentEscalatorCredentialBytes();
+
+  void refreshAllNotification();
+
 }

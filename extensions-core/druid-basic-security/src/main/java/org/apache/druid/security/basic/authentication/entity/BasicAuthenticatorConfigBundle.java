@@ -17,21 +17,35 @@
  * under the License.
  */
 
-package org.apache.druid.security.authorization;
+package org.apache.druid.security.basic.authentication.entity;
 
-import org.apache.druid.security.basic.authorization.db.cache.BasicAuthorizerCacheNotifier;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class NoopBasicAuthorizerCacheNotifier implements BasicAuthorizerCacheNotifier
+public class BasicAuthenticatorConfigBundle
 {
-  @Override
-  public void addUpdateUser(String authorizerPrefix, byte[] userAndRoleMap)
-  {
+  private final BasicAuthConfig config;
+  private final byte[] serializedConfig;
 
+  @JsonCreator
+  public BasicAuthenticatorConfigBundle(
+      @JsonProperty("config") BasicAuthConfig config,
+      @JsonProperty("serializedConfig") byte[] serializedConfig
+  )
+  {
+    this.config = config;
+    this.serializedConfig = serializedConfig;
   }
 
-  @Override
-  public void addUpdateGroupMapping(String authorizerPrefix, byte[] groupMappingAndRoleMap)
+  @JsonProperty
+  public BasicAuthConfig getConfig()
   {
+    return config;
+  }
 
+  @JsonProperty
+  public byte[] getSerializedConfig()
+  {
+    return serializedConfig;
   }
 }
