@@ -34,4 +34,10 @@ public class NoopBasicAuthorizerCacheNotifier implements BasicAuthorizerCacheNot
   {
 
   }
+
+  @Override
+  public void addUpdateGroup(String authorizerPrefix, byte[] groupAndRoleMap)
+  {
+
+  }
 }
